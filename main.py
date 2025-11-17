@@ -25,12 +25,11 @@ def read_manifest(filename):
     # initialize list storing all containers to use indices for 2D array state
     containers = [Container("Ship"), Container("Unused")]
     num_containers = 0
-    manifest_idx = 0
     # initialize ship start state based on manifest
     state = np.ones(shape=(8, 12), dtype=int)
     for i in range(rows):
         for j in range(cols):
-            name = df.iloc[manifest_idx, 2]
+            name = df.iloc[(12*i) + j, 2]
             if name == "UNUSED":
                 continue
             if name == "NAN":
@@ -40,7 +39,6 @@ def read_manifest(filename):
                 containers.append(Container(name, weight))
                 num_containers += 1
                 state[i, j] = num_containers + 1
-            manifest_idx += 1
     print(state)
     start_state = ShipState(state)
     return containers, start_state
