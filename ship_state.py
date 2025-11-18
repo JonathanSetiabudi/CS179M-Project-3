@@ -22,7 +22,7 @@ class ShipState:
         self.parent = parent
         self.last_move = last_move
     
-    # incomplete
+    # Returns an 3D Numpy Array of all possible next states from the current state
     def get_neighbors(self, visited_set):
         # Generate all possible next states from the current state
         neighbors = []
@@ -46,14 +46,19 @@ class ShipState:
                         # tallest_row_in_btw >= target_height and tallest_row_in_btw >= height
                         else:
                             vertical_distance = abs((tallest_row_in_btw + 1) - height) + abs((tallest_row_in_btw + 1) - target_height)
-                        # TODO create new state representation in new_state_array
                         new_state_array = np.copy(self.state)
+                        # Move container from column to target_column
+                        new_state_array[target_height, target_column] = new_state_array[height, column]
+                        new_state_array[height, column] = 1
+                        move_cost = horizontal_distance + vertical_distance
+                        new_ShipeState = ShipState(new_state_array, self.total_cost + move_cost, self, [(height, column), (target_height, target_column)])
+                        neighbors.append(new_ShipeState)
         return neighbors
     
     def get_top_container(self, column):
         # Return the top container in the specified column
-        for row in range(self.state.shape[0]):
-            if self.state[row, column] != 0 and self.state[row, column] != -1:
+        for row in range(self.state.shape[0] -1, -1, -1):
+            if self.state[row, column] != 0 and self.state[row, column] != 1:
                 return row
         return -1
     
