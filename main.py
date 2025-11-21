@@ -3,11 +3,10 @@ import pandas as pd
 import os
 
 from ship_state import Container, ShipState
+# from solve import ShipSolver
 
-def read_manifest(filename):
+def read_manifest(filename, rows=8, cols=12):
     # X2 ship has 1 bay with dim 8x12
-    rows, cols = 8, 12
-
     while True:
         while not filename.endswith(".txt"):
             filename = input("Please enter a .txt file: ")
@@ -15,7 +14,7 @@ def read_manifest(filename):
         while not os.path.exists(filename):
             filename = input("Please enter a valid filename: ")
 
-        df = pd.read_csv(filename, sep=', ', engine='python', names=['Coordinates', 'Weight', 'Name'])
+        df = pd.read_csv(filename, sep=', ', engine='python', header=None)
 
         if len(df) != (rows * cols):
             filename = input("Invalid manifest. Please enter a valid manifest: ")
@@ -26,10 +25,10 @@ def read_manifest(filename):
     containers = [Container("Ship"), Container("Unused")]
     num_containers = 0
     # initialize ship start state based on manifest
-    state = np.ones(shape=(8, 12), dtype=int)
+    state = np.ones(shape=(rows, cols), dtype=int)
     for i in range(rows):
         for j in range(cols):
-            name = df.iloc[(12*i) + j, 2]
+            name = df.iloc[(cols*i) + j, 2]
             if name == "UNUSED":
                 continue
             if name == "NAN":
@@ -43,10 +42,19 @@ def read_manifest(filename):
     start_state = ShipState(state)
     return containers, start_state
 
+def make_outbound_manifest(filename, containers, state):
+    state = np.array(state)
+    rows, cols = state.shape[0], state.shape[1]
+    text = np.empty(rows * cols, dtype=str)
+    for i in range(state.shape[0]):
+        for j in range(state.shape[1]):
+            text[i*cols + j] = f"[{str(i).zfill(2)}, {str(j).zfill(2)}], {{{str(containers[state[i, j]].weight).zfill(5)}}}, {containers[state[i, j]].name}"
+    np.savetxt(filename, text)
+
 def main():
     filename = input("Enter the manifest file path: ")
     containers, start_state = read_manifest(filename)
-
+    
 
 if __name__ == '__main__':
     main()
