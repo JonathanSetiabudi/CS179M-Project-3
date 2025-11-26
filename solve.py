@@ -1,7 +1,6 @@
 import heapq
 import numpy as np
 from ship_state import Container, ShipState
-from main import read_manifest
 class ShipSolver:
     def __init__(self, start_state=None, container_list=[]):
         self.existing = set()
@@ -20,9 +19,6 @@ class ShipSolver:
                 continue
             else:
                 self.existing.add(curr_state.state)
-            print(f"Exploring State with f(n): {curr_state.total_cost} + {curr_state.heuristic} = {curr_state.total_cost + curr_state.heuristic}")
-            for i in range(len(curr_state.state)):
-                print(self.container_list[curr_state.state[i][0]].weight, self.container_list[curr_state.state[i][1]].weight, self.container_list[curr_state.state[i][2]].weight, self.container_list[curr_state.state[i][3]].weight)
 
             if curr_state.is_goal_state(self.goal_state, self.container_list):
                 return curr_state

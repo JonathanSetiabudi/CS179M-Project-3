@@ -96,9 +96,6 @@ class ShipState:
                         new_state = ShipState(new_state_array, self.total_cost + move_cost, self, [(height, column), (target_height, target_column)])
                         if new_state.is_goal_state(goal_state, container_list):
                             new_state.total_cost += (len(self.state)-1) - new_state.last_move[1][0] + new_state.last_move[1][1]
-                        print(f"Adding neighboring state with cost {vertical_distance} + {horizontal_distance} + {move_from_prev} = {move_cost}, total cost: {new_state.total_cost}")
-                        for i in range(len(new_state.state)):
-                            print(container_list[new_state.state[i][0]].weight, container_list[new_state.state[i][1]].weight, container_list[new_state.state[i][2]].weight, container_list[new_state.state[i][3]].weight)
                         neighbors.append(new_state)       
         return neighbors
     
