@@ -18,12 +18,27 @@ class ShipState:
         return self.total_cost + self.heuristic < other.total_cost + other.heuristic
     
     def is_goal_state(self, goal_state, container_list):
+        # Trivially balanced if there are only 2 or 3 containers (Ship and Unused and (maybe) + 1 container)
+        if len(container_list) == 2 or len(container_list) == 3:
+            return True
+        # if there are two containers besides Ship and Unused, make sure they're on opposite sides
+        elif len(container_list) == 4:
+            port_has_container = False
+            starboard_has_container = False
+            for col in range(len(self.state[0])):
+                if self.get_top_container(col) != -1:
+                    if col < len(self.state[0]) // 2:
+                        port_has_container = True
+                    else:
+                        starboard_has_container = True
+
+            return port_has_container and starboard_has_container
         # Calculate the weight on the port and starboard sides
         port_weight = 0
         starboard_weight = 0
         for col in range(len(self.state[0])):
             row = 0
-            # While we don't find air/empty slot, keep going down the column
+            # While we don't find air/empty slot, keep going up the column
             # This doesn't apply to Ship slots because some containers can sit on top of the Ship slots while nothing can sit on air
             while row in range(len(self.state)) and self.state[row][col] != 1:
                 container_index = self.state[row][col]
@@ -39,12 +54,9 @@ class ShipState:
 
     # Returns an 3D Numpy Array of all possible next states from the current state
     def get_neighbors(self, visited_set, is_start, goal_state, container_list):
-        # print("Generating neighbors for state with total cost: ", self.total_cost)
-        # for i in range(len(self.state)):
-        #     print(container_list[self.state[i][0]].weight, container_list[self.state[i][1]].weight, container_list[self.state[i][2]].weight, container_list[self.state[i][3]].weight)
         def get_tallest_in_between(col1, col2, top_containers):
             if abs(col2 - col1) <= 1:
-                return 0
+                return -1
             return max(top_containers[min(col1, col2)+1:max(col1, col2)])
         
         def get_vertical_distance(height, target_height, tallest_in_btw):
@@ -89,16 +101,17 @@ class ShipState:
                             move_cost += column + len(self.state) - 1 - height
                         else:
                             # Add cost moving from last move to this column
-                            tallest_between_prev = get_tallest_in_between(self.last_move[1][1], column, top_containers)
-                            move_from_prev = abs(self.last_move[1][0] - height) + get_vertical_distance(self.last_move[1][1], column, tallest_between_prev)
+                            prev_row = self.last_move[1][0]
+                            prev_col = self.last_move[1][1]
+                            tallest_between_prev = get_tallest_in_between(prev_col, column, top_containers)
+                            horizontal_from_prev = abs(prev_col - column)
+                            vertical_from_prev = get_vertical_distance(prev_row, height, tallest_between_prev)
+                            move_from_prev = horizontal_from_prev + vertical_from_prev
                             move_cost += move_from_prev
                             
                         new_state = ShipState(new_state_array, self.total_cost + move_cost, self, [(height, column), (target_height, target_column)])
                         if new_state.is_goal_state(goal_state, container_list):
                             new_state.total_cost += (len(self.state)-1) - new_state.last_move[1][0] + new_state.last_move[1][1]
-                        print(f"Adding neighboring state with cost {vertical_distance} + {horizontal_distance} + {move_from_prev} = {move_cost}, total cost: {new_state.total_cost}")
-                        for i in range(len(new_state.state)):
-                            print(container_list[new_state.state[i][0]].weight, container_list[new_state.state[i][1]].weight, container_list[new_state.state[i][2]].weight, container_list[new_state.state[i][3]].weight)
                         neighbors.append(new_state)       
         return neighbors
     
@@ -111,7 +124,7 @@ class ShipState:
     
     def is_col_full(self, column):
         # Check if the specified column is full
-        return self.state[len(self.state)-1][column] != 1
+        return self.state[len(self.state)-1][column] != 1 and self.state[len(self.state)-1][column] != 0
     
     def calc_heuristic(self, container_list, total_weight):
         port_weight = 0
