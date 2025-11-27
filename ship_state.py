@@ -89,8 +89,7 @@ class ShipState:
                         vertical_distance = get_vertical_distance(height, target_height, tallest_row_in_btw)
                         new_state_array = np.copy(curr_state)
                         # Move container from column to target_column
-                        new_state_array[target_height, target_column] = new_state_array[height, column]
-                        new_state_array[height, column] = 1
+                        new_state_array[target_height, target_column], new_state_array[height, column] = new_state_array[height, column], new_state_array[target_height, target_column]
                         new_state_array = tuple(map (tuple, new_state_array))
                         if new_state_array in visited_set:
                             continue
@@ -117,10 +116,10 @@ class ShipState:
     
     def get_top_container(self, column):
         # Return the top container in the specified column
-        for row in range(len(self.state)-1, -1, -1):
-            if self.state[row][column] != 0 and self.state[row][column] != 1:
-                return row
-        return -1
+        row = len(self.state)-1
+        while row in range(len(self.state)) and self.state[row][column] == 1:
+            row -= 1
+        return row
     
     def is_col_full(self, column):
         # Check if the specified column is full
