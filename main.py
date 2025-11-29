@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import os
+import time
 
 from ship_state import Container, ShipState
-# from solve import ShipSolver
+from solve import ShipSolver
 
 def read_manifest(filename, rows=8, cols=12):
     # X2 ship has 1 bay with dim 8x12
@@ -21,40 +22,69 @@ def read_manifest(filename, rows=8, cols=12):
         else:
             break
 
-    # initialize list storing all containers to use indices for 2D array state
     containers = [Container("Ship"), Container("Unused")]
     num_containers = 0
-    # initialize ship start state based on manifest
     state = np.ones(shape=(rows, cols), dtype=int)
+
     for i in range(rows):
         for j in range(cols):
-            name = df.iloc[(cols*i) + j, 2]
-            if name == "UNUSED":
-                continue
-            if name == "NAN":
+            row_idx = cols * i + j
+            name_raw = df.iloc[row_idx, 2]
+            if pd.isna(name_raw):
                 state[i, j] = 0
+                continue
+            name = str(name_raw).strip()
+            if name.upper() == "UNUSED":
+                continue
+            if name.upper() == "NAN":
+                state[i, j] = 0
+                continue
+
+            weight_field = str(df.iloc[row_idx, 1]).strip()
+            if weight_field.startswith('{') and weight_field.endswith('}'):
+                weight_str = weight_field[1:-1]
             else:
-                weight = int(df.iloc[i, 1][1:6])
-                containers.append(Container(name, weight))
-                num_containers += 1
-                state[i, j] = num_containers + 1
-    print(state)
+                weight_str = weight_field
+            try:
+                weight = int(weight_str)
+            except ValueError:
+                weight = 0  # fallback
+
+            containers.append(Container(name, weight))
+            num_containers += 1
+            state[i, j] = num_containers + 1
+
+    state = tuple(map(tuple, state))
+    for row in state:
+        print(row)
     start_state = ShipState(state)
     return containers, start_state
 
 def make_outbound_manifest(filename, containers, state):
     state = np.array(state)
-    rows, cols = state.shape[0], state.shape[1]
+    rows, cols = state.shape
     text = np.empty(rows * cols, dtype=str)
-    for i in range(state.shape[0]):
-        for j in range(state.shape[1]):
-            text[i*cols + j] = f"[{str(i).zfill(2)}, {str(j).zfill(2)}], {{{str(containers[state[i, j]].weight).zfill(5)}}}, {containers[state[i, j]].name}"
+    for i in range(rows):
+        for j in range(cols):
+            c = containers[state[i, j]]
+            text[i*cols + j] = f"[{str(i).zfill(2)}, {str(j).zfill(2)}], {{{str(c.weight).zfill(5)}}}, {c.name}"
     np.savetxt(filename, text)
 
 def main():
     filename = input("Enter the manifest file path: ")
     containers, start_state = read_manifest(filename)
-    
+    for container in containers:
+        print(f"{container.name}: {container.weight}")
+    start_time = time.time()
+    solver = ShipSolver(start_state, containers)
+    final_state = solver.solve()
+    end_time = time.time()
+    print(f"Solved in {end_time - start_time:.2f} seconds.")
+    print(f"Final State Reached with cost {final_state.total_cost}:")
+    for row in final_state.state:
+        print(row)
+    print("Steps taken: ")
+    steps = solver.get_steps(final_state)
 
 if __name__ == '__main__':
     main()

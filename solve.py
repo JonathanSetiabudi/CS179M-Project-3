@@ -1,7 +1,6 @@
 import heapq
 import numpy as np
 from ship_state import Container, ShipState
-from main import read_manifest
 class ShipSolver:
     def __init__(self, start_state=None, container_list=[]):
         self.existing = set()
@@ -14,17 +13,20 @@ class ShipSolver:
     def solve(self):
         pq = []
         heapq.heappush(pq, self.start)
+        exploration_counter = 0
         while len(pq) != 0:
             curr_state = heapq.heappop(pq)
+            exploration_counter += 1
             if curr_state.state in self.existing:
                 continue
             else:
                 self.existing.add(curr_state.state)
             print(f"Exploring State with f(n): {curr_state.total_cost} + {curr_state.heuristic} = {curr_state.total_cost + curr_state.heuristic}")
             for i in range(len(curr_state.state)):
-                print(self.container_list[curr_state.state[i][0]].weight, self.container_list[curr_state.state[i][1]].weight, self.container_list[curr_state.state[i][2]].weight, self.container_list[curr_state.state[i][3]].weight)
+                print(self.container_list[curr_state.state[i][0]].weight, self.container_list[curr_state.state[i][1]].weight, self.container_list[curr_state.state[i][2]].weight, self.container_list[curr_state.state[i][3]].weight, self.container_list[curr_state.state[i][4]].weight, self.container_list[curr_state.state[i][5]].weight, self.container_list[curr_state.state[i][6]].weight, self.container_list[curr_state.state[i][7]].weight, self.container_list[curr_state.state[i][8]].weight, self.container_list[curr_state.state[i][9]].weight, self.container_list[curr_state.state[i][10]].weight, self.container_list[curr_state.state[i][11]].weight)
 
             if curr_state.is_goal_state(self.goal_state, self.container_list):
+                print(f"Explored {exploration_counter} states to find a solution.")
                 return curr_state
             neighbors = curr_state.get_neighbors(self.existing, curr_state == self.start, self.goal_state, self.container_list)
             for neighbor in neighbors:
