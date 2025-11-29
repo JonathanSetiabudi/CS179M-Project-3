@@ -1,0 +1,94 @@
+from ship_state import Container, ShipState
+from main import read_manifest
+from ship_state import ShipState
+from solve import ShipSolver
+import numpy as np
+
+def deep_convert(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.astype(int).tolist()
+    if isinstance(obj, (list, tuple)):
+        return [deep_convert(x) for x in obj]
+    if isinstance(obj, (np.int64, np.int32, np.int16, float)):
+        return int(obj)
+    if isinstance(obj, dict):
+        return {k: deep_convert(v) for k, v in obj.items()}
+    return obj
+
+
+def clean_steps(steps):
+    out = []
+    for pair in steps:
+        out.append([int(pair[0]), int(pair[1])])
+    return out
+
+#this is necessary to make the state hashable for sets
+def freeze_state(state):
+    return tuple(tuple(int(x) for x in row) for row in state)
+
+def thaw_state(state):
+    return np.array(state)
+
+
+def extract_ship_grids(final_state):
+    grids =[]
+    curr = final_state
+    while curr != None:
+        grids.append(curr.state)
+        curr = curr.parent
+    
+    grids.reverse() #reverse to get from start to end
+    return grids
+
+def convert_to_jsonlist(state):
+    if isinstance(state, np.ndarray): #returns whether an object is an instance or subclass of ndarray
+        return state.astype(int).tolist()
+    return state
+
+def run_balancing(manifest_path):
+    #load the manifest to get the containers and start state
+    containers, start_state = read_manifest(manifest_path)
+    
+    #freeze 
+    start_state.state = freeze_state(start_state.state)
+    
+    print("start_state.state =", start_state.state)
+
+    #solve the problem
+    solver = ShipSolver(start_state=start_state, container_list=containers)
+    final_state = solver.solve()
+    
+    #input the final state to get the crane moves sequence (coordinates)
+    if final_state is None:
+        return {"solution": None}
+    
+    #thaw
+    final_state.state = thaw_state(final_state.state)
+    
+    steps = solver.get_steps(final_state)
+    #these are what the ship looks like at each step
+    ship_grids_seq = extract_ship_grids(final_state)
+    
+    #convert to json
+    shipstate_list_seq = [deep_convert(s) for s in ship_grids_seq]
+    
+    container_info = [
+        {
+            "index": i,
+            "name": c.name,
+            "weight": c.weight
+        }
+        for i, c in enumerate(containers)#so you can iterate through the object
+    ]
+    
+    result = {
+        "initial_state": deep_convert(shipstate_list_seq[0]),
+        "states": shipstate_list_seq,
+        "steps": deep_convert(steps),
+        "containers": container_info,
+        "moves": len(steps) - 2,  #excluding the initial and final positions
+        "minutes": final_state.total_cost
+    }
+    result = deep_convert(result)
+    return result
+    
