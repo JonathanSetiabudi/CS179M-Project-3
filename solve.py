@@ -27,6 +27,7 @@ class ShipSolver:
 
             if curr_state.is_goal_state(self.goal_state, self.container_list):
                 print(f"Explored {exploration_counter} states to find a solution.")
+                del pq
                 return curr_state
             neighbors = curr_state.get_neighbors(self.existing, curr_state == self.start, self.goal_state, self.container_list)
             for neighbor in neighbors:
