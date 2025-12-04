@@ -1,5 +1,6 @@
 from ship_state import Container, ShipState
 from main import read_manifest
+from main import make_outbound_manifest
 from ship_state import ShipState
 from solve import ShipSolver
 import numpy as np
@@ -72,6 +73,9 @@ def run_balancing(manifest_path):
     #convert to json
     shipstate_list_seq = [deep_convert(s) for s in ship_grids_seq]
     
+    #outbound text so the user can download file  
+    outbound_text = make_outbound_manifest(containers, final_state.state)
+    
     container_info = [
         {
             "index": i,
@@ -87,7 +91,8 @@ def run_balancing(manifest_path):
         "steps": deep_convert(steps),
         "containers": container_info,
         "moves": len(steps) - 2,  #excluding the initial and final positions
-        "minutes": final_state.total_cost
+        "minutes": final_state.total_cost,
+        "outbound_text": outbound_text
     }
     result = deep_convert(result)
     return result
