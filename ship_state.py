@@ -26,7 +26,7 @@ class ShipState:
             port_has_container = False
             starboard_has_container = False
             for col in range(len(self.state[0])):
-                if self.get_top_container(col) != -1:
+                if self.state[self.get_top_container(col)][col] > 1:
                     if col < len(self.state[0]) // 2:
                         port_has_container = True
                     else:
