@@ -57,7 +57,7 @@ def read_manifest(filename, rows=8, cols=12):
     state = tuple(map(tuple, state))
     for row in state:
         print(row)
-    start_state = ShipState(state)
+    start_state = ShipState(state, last_move=(-1, (7, 0)))
     return containers, start_state
 
 def make_outbound_manifest(containers, state):
