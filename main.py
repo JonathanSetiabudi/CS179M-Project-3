@@ -60,15 +60,18 @@ def read_manifest(filename, rows=8, cols=12):
     start_state = ShipState(state, last_move=(-1, (rows - 1, 0)))
     return containers, start_state
 
-def make_outbound_manifest(filename, containers, state):
+def make_outbound_manifest(containers, state):
     state = np.array(state)
     rows, cols = state.shape
     text = np.empty(rows * cols, dtype=str)
+    lines = []
     for i in range(rows):
         for j in range(cols):
             c = containers[state[i, j]]
             text[i*cols + j] = f"[{str(i).zfill(2)}, {str(j).zfill(2)}], {{{str(c.weight).zfill(5)}}}, {c.name}"
-    np.savetxt(filename, text)
+            lines.append(f"[{str(i).zfill(2)}, {str(j).zfill(2)}], {{{str(c.weight).zfill(5)}}}, {c.name}")
+    # np.savetxt(filename, text)
+    return "\n".join(lines)
 
 def main():
     filename = input("Enter the manifest file path: ")
