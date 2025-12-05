@@ -11,6 +11,7 @@ class ShipState:
         self.state = state_array
         self.total_cost = total_cost
         self.parent = parent
+        # last_move format: [(from_pos, to_pos), Move from previous position cost, Moving the container Cost]
         self.last_move = last_move
         self.heuristic = 0
 
@@ -97,20 +98,20 @@ class ShipState:
                         move_from_prev = 0
                         if is_start:
                             # Add extra cost for moving from parking position
-                            move_cost += column + len(self.state) - 1 - height
+                            move_from_prev += column + len(self.state) - 1 - height
                         else:
                             # Add cost moving from last move to this column
-                            prev_row = self.last_move[1][0]
-                            prev_col = self.last_move[1][1]
+                            prev_row = self.last_move[0][1][0]
+                            prev_col = self.last_move[0][1][1]
                             tallest_between_prev = get_tallest_in_between(prev_col, column, top_containers)
                             horizontal_from_prev = abs(prev_col - column)
                             vertical_from_prev = get_vertical_distance(prev_row, height, tallest_between_prev)
                             move_from_prev = horizontal_from_prev + vertical_from_prev
-                            move_cost += move_from_prev
-                            
-                        new_state = ShipState(new_state_array, self.total_cost + move_cost, self, [(height, column), (target_height, target_column)])
+                        self.move_cost = move_cost
+
+                        new_state = ShipState(new_state_array, self.total_cost + move_cost + move_from_prev, self, [((height, column), (target_height, target_column)), move_from_prev, move_cost])
                         if new_state.is_goal_state(goal_state, container_list):
-                            new_state.total_cost += (len(self.state)-1) - new_state.last_move[1][0] + new_state.last_move[1][1]
+                            new_state.total_cost += (len(self.state)-1) - new_state.last_move[0][1][0] + new_state.last_move[0][1][1]
                         neighbors.append(new_state)       
         return neighbors
     

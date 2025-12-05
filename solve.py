@@ -21,9 +21,9 @@ class ShipSolver:
                 continue
             else:
                 self.existing.add(curr_state.state)
-            print(f"Exploring State with f(n): {curr_state.total_cost} + {curr_state.heuristic} = {curr_state.total_cost + curr_state.heuristic}")
-            for i in range(len(curr_state.state)):
-                print(self.container_list[curr_state.state[i][0]].weight, self.container_list[curr_state.state[i][1]].weight, self.container_list[curr_state.state[i][2]].weight, self.container_list[curr_state.state[i][3]].weight, self.container_list[curr_state.state[i][4]].weight, self.container_list[curr_state.state[i][5]].weight, self.container_list[curr_state.state[i][6]].weight, self.container_list[curr_state.state[i][7]].weight, self.container_list[curr_state.state[i][8]].weight, self.container_list[curr_state.state[i][9]].weight, self.container_list[curr_state.state[i][10]].weight, self.container_list[curr_state.state[i][11]].weight)
+            # print(f"Exploring State with f(n): {curr_state.total_cost} + {curr_state.heuristic} = {curr_state.total_cost + curr_state.heuristic}")
+            # for i in range(len(curr_state.state)):
+            #     print(self.container_list[curr_state.state[i][0]].weight, self.container_list[curr_state.state[i][1]].weight, self.container_list[curr_state.state[i][2]].weight, self.container_list[curr_state.state[i][3]].weight, self.container_list[curr_state.state[i][4]].weight, self.container_list[curr_state.state[i][5]].weight, self.container_list[curr_state.state[i][6]].weight, self.container_list[curr_state.state[i][7]].weight, self.container_list[curr_state.state[i][8]].weight, self.container_list[curr_state.state[i][9]].weight, self.container_list[curr_state.state[i][10]].weight, self.container_list[curr_state.state[i][11]].weight)
 
             if curr_state.is_goal_state(self.goal_state, self.container_list):
                 print(f"Explored {exploration_counter} states to find a solution.")
@@ -35,23 +35,64 @@ class ShipSolver:
                 heapq.heappush(pq, neighbor)
         return None
 
+    # def get_steps(self, final_state):
+    #     rows = len(final_state.state)
+    #     curr_state = final_state
+    #     steps = []
+    #     while curr_state != self.start:
+    #         steps.append(curr_state.last_move)
+    #         curr_state = curr_state.parent
+    #     #steps.append([(rows-1, 0), (steps[len(steps)-1][0])])
+    #     steps.reverse()
+    #     #steps.append([(steps[len(steps)-1][1]), (rows-1, 0)])
+    #     steps2 = [(rows-1, 0)]
+    #     for step in steps:
+    #         steps2.extend(step)
+    #     steps2.append((rows-1, 0))
+    #     steps = steps2
+    #     for step in steps:
+    #         print(step)
+    #     return steps
+
     def get_steps(self, final_state):
-        rows = len(final_state.state)
-        curr_state = final_state
         steps = []
-        while curr_state != self.start:
-            steps.append(curr_state.last_move)
+        curr_state = final_state
+        while curr_state.parent is not None:
+            from_pos, to_pos = curr_state.last_move[0]
+            crane_cost = curr_state.last_move[1]
+            container_cost = curr_state.last_move[2]
+            
+            # Get container name from the current state (before the move)
+            container_index = curr_state.parent.state[from_pos[0]][from_pos[1]]
+            container_name = self.container_list[container_index].name
+        
+            steps.append({
+                'container': container_name,
+                'from': from_pos,
+                'to': to_pos,
+                'crane_cost': crane_cost,
+                'container_cost': container_cost,
+                'total': crane_cost + container_cost
+            })
             curr_state = curr_state.parent
-        #steps.append([(rows-1, 0), (steps[len(steps)-1][0])])
         steps.reverse()
-        #steps.append([(steps[len(steps)-1][1]), (rows-1, 0)])
-        steps2 = [(rows-1, 0)]
-        for step in steps:
-            steps2.extend(step)
-        steps2.append((rows-1, 0))
-        steps = steps2
-        for step in steps:
-            print(step)
+
+        # Start at parking position
+        rows = len(self.start.state)
+        crane_pos = (rows - 1, 0)
+        
+        for i, step in enumerate(steps):
+            # Move crane to pick up container
+            print(f"Move crane from [{crane_pos[0]:02d},{crane_pos[1]:02d}] to [{step['from'][0]:02d},{step['from'][1]:02d}] (cost: {step['crane_cost']})")
+            crane_pos = step['from']
+            
+            # Move container
+            print(f"Move container '{step['container']}' from [{step['from'][0]:02d},{step['from'][1]:02d}] to [{step['to'][0]:02d},{step['to'][1]:02d}] (cost: {step['container_cost']})")
+            crane_pos = step['to']
+        # Return to parking
+        final_return_cost = (rows - 1) - crane_pos[0] + crane_pos[1]
+        print(f"Final Move: Move crane from [{crane_pos[0]:02d},{crane_pos[1]:02d}] to parking position [{rows-1:02d},00] (cost: {final_return_cost})")
+        
         return steps
 
 if __name__ == "__main__":
