@@ -78,7 +78,7 @@ class ShipState:
             top_containers.append(top_container)
 
         for column in range(curr_state.shape[1]):
-            if top_containers[column] != -1 and (is_start or self.last_move[0][1] != (top_containers[column], column)):
+            if top_containers[column] != -1 and container_list[curr_state[top_containers[column],column]].name != "NAN" and (is_start or self.last_move[0][1] != (top_containers[column], column)):
                 # move container if possible
                 for target_column in range(curr_state.shape[1]):
                     if column != target_column and not self.is_col_full(target_column):
