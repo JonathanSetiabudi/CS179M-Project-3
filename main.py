@@ -22,7 +22,7 @@ def read_manifest(filename, rows=8, cols=12):
         else:
             break
 
-    containers = [Container("Ship"), Container("Unused")]
+    containers = [Container("NAN"), Container("UNUSED")]
     num_containers = 0
     state = np.ones(shape=(rows, cols), dtype=int)
 
@@ -68,9 +68,7 @@ def make_outbound_manifest(containers, state):
     for i in range(rows):
         for j in range(cols):
             c = containers[state[i, j]]
-            text[i*cols + j] = f"[{str(i).zfill(2)}, {str(j).zfill(2)}], {{{str(c.weight).zfill(5)}}}, {c.name}"
-            lines.append(f"[{str(i).zfill(2)}, {str(j).zfill(2)}], {{{str(c.weight).zfill(5)}}}, {c.name}")
-    # np.savetxt(filename, text)
+            lines.append(f"[{str(i+1).zfill(2)}, {str(j+1).zfill(2)}], {{{str(c.weight).zfill(5)}}}, {c.name}")
     return "\n".join(lines)
 
 def main():
