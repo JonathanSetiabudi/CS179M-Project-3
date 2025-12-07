@@ -67,9 +67,31 @@ def run_balancing(manifest_path):
     final_state.state = thaw_state(final_state.state)
     
     steps = solver.get_steps(final_state) #change, get_steps returns something different 
-    newSteps = [[step["from"], step["to"]] for step in steps]
     
-    minutesPerMove = [step["total"] for step in steps]
+    newSteps = []
+    rows = len(final_state.state)
+    park = (rows - 1, 0) #just 7
+    newSteps.append(park)
+    
+    for step in steps:
+        newSteps.append(step["from"])
+        newSteps.append(step["to"])
+    newSteps.append(park)
+            
+    print("newSteps =", newSteps)
+    print("final_state.total_cost =", final_state.total_cost)
+    print("number of moves =", len(steps)) #excluding initial and final positions
+    
+    minutesPerMove = []
+    
+    for step in steps:
+        minutesPerMove.append(step["crane_cost"]) 
+        minutesPerMove.append(step["container_cost"])
+    last = steps[-1]["to"]
+    lastCost = abs(park[0] - last[0]) + abs(park[1] - last[1])
+    minutesPerMove.append(lastCost)
+    
+    print("minutesPerMove =", minutesPerMove)
     #these are what the ship looks like at each step
     ship_grids_seq = extract_ship_grids(final_state)
     
@@ -93,7 +115,7 @@ def run_balancing(manifest_path):
         "states": shipstate_list_seq,
         "steps": tupleConvert(newSteps),
         "containers": container_info,
-        "moves": len(steps) - 2,  #excluding the initial and final positions
+        "moves": len(steps),  #excluding the initial and final positions
         "minutes": final_state.total_cost,
         "minutes_per_move": minutesPerMove,
         "outbound_text": outbound_text
