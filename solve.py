@@ -66,7 +66,7 @@ if __name__ == "__main__":
     # containers, start_state = read_manifest("./Given_Test_Cases/ShipCase2.txt", rows, cols)
     solver = ShipSolver(start_state, containers)
     final_state = solver.solve()
-    for i in range(rows):
-        print(containers[final_state.state[i][0]].weight, containers[final_state.state[i][1]].weight, containers[final_state.state[i][2]].weight, containers[final_state.state[i][3]].weight)
-    print(final_state.total_cost)
+    # for i in range(rows):
+    #     print(containers[final_state.state[i][0]].weight, containers[final_state.state[i][1]].weight, containers[final_state.state[i][2]].weight, containers[final_state.state[i][3]].weight)
+    # print(final_state.total_cost)
     steps = solver.get_steps(final_state)

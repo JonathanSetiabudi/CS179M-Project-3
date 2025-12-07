@@ -5,15 +5,15 @@ from ship_state import ShipState
 from solve import ShipSolver
 import numpy as np
 
-def deep_convert(obj):
+def tupleConvert(obj):
     if isinstance(obj, np.ndarray):
         return obj.astype(int).tolist()
     if isinstance(obj, (list, tuple)):
-        return [deep_convert(x) for x in obj]
+        return [tupleConvert(x) for x in obj]
     if isinstance(obj, (np.int64, np.int32, np.int16, float)):
         return int(obj)
     if isinstance(obj, dict):
-        return {k: deep_convert(v) for k, v in obj.items()}
+        return {k: tupleConvert(v) for k, v in obj.items()}
     return obj
 
 
@@ -66,12 +66,15 @@ def run_balancing(manifest_path):
     #thaw
     final_state.state = thaw_state(final_state.state)
     
-    steps = solver.get_steps(final_state)
+    steps = solver.get_steps(final_state) #change, get_steps returns something different 
+    newSteps = [[step["from"], step["to"]] for step in steps]
+    
+    minutesPerMove = [step["total"] for step in steps]
     #these are what the ship looks like at each step
     ship_grids_seq = extract_ship_grids(final_state)
     
     #convert to json
-    shipstate_list_seq = [deep_convert(s) for s in ship_grids_seq]
+    shipstate_list_seq = [tupleConvert(s) for s in ship_grids_seq]
     
     #outbound text so the user can download file  
     outbound_text = make_outbound_manifest(containers, final_state.state)
@@ -86,14 +89,15 @@ def run_balancing(manifest_path):
     ]
     
     result = {
-        "initial_state": deep_convert(shipstate_list_seq[0]),
+        "initial_state": tupleConvert(shipstate_list_seq[0]),
         "states": shipstate_list_seq,
-        "steps": deep_convert(steps),
+        "steps": tupleConvert(newSteps),
         "containers": container_info,
         "moves": len(steps) - 2,  #excluding the initial and final positions
         "minutes": final_state.total_cost,
+        "minutes_per_move": minutesPerMove,
         "outbound_text": outbound_text
     }
-    result = deep_convert(result)
+    result = tupleConvert(result)
     return result
     

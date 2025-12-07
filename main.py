@@ -55,8 +55,8 @@ def read_manifest(filename, rows=8, cols=12):
             state[i, j] = num_containers + 1
 
     state = tuple(map(tuple, state))
-    for row in state:
-        print(row)
+    # for row in state:
+    #     print(row)
     start_state = ShipState(state, last_move=(-1, (rows - 1, 0)))
     return containers, start_state
 
